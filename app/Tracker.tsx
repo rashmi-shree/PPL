@@ -97,12 +97,17 @@ export default function Tracker() {
   const [sync, setSync] = useState<SyncState>(
     isSupabaseEnabled ? "idle" : "local"
   );
-  const [logging, setLogging] = useState(false);
-  const [logMsg, setLogMsg] = useState("");
+  const [sessionSync, setSessionSync] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
   const [notes, setNotes] = useState("");
   const [rpe, setRpe] = useState("");
 
   const pending = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  // Days the user has actually edited this visit (gates auto-save so merely
+  // opening/browsing a day never creates an empty history entry).
+  const touchedDays = useRef<Set<string>>(new Set());
+  const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Rest timer
   const [restLeft, setRestLeft] = useState<number | null>(null);
@@ -183,16 +188,19 @@ export default function Tracker() {
     return { map, session: prior };
   }, [sessions, day]);
 
-  // Best weight ever recorded per exercise (PR baseline).
+  // Best weight per exercise from PRIOR days (excludes today's auto-saved
+  // session so the PR badge keeps showing while you're beating it today).
   const prByExercise = useMemo(() => {
+    const today = localDateString();
     const map: Record<string, number> = {};
-    sessions.forEach((s) =>
+    sessions.forEach((s) => {
+      if (s.log_date === today) return;
       s.entries.forEach((e) => {
         if (e.weight !== null && e.weight !== undefined) {
           map[e.exercise_id] = Math.max(map[e.exercise_id] ?? 0, e.weight);
         }
-      })
-    );
+      });
+    });
     return map;
   }, [sessions]);
 
@@ -218,12 +226,14 @@ export default function Tracker() {
 
   const setWeight = (id: string, value: string) => {
     const clean = value.replace(/[^0-9.]/g, "");
+    touchedDays.current.add(activeDay);
     setWeights((prev) => ({ ...prev, [id]: clean }));
     upsertToCloud(id, clean);
   };
 
   const setRep = (id: string, setIdx: number, value: string, total: number) => {
     const clean = value.replace(/[^0-9]/g, "").slice(0, 3);
+    touchedDays.current.add(activeDay);
     setReps((prev) => {
       const arr = [...(prev[id] ?? Array(total).fill(""))];
       while (arr.length < total) arr.push("");
@@ -256,38 +266,51 @@ export default function Tracker() {
   const addRest = (s: number) =>
     setRestLeft((prev) => (prev === null ? s : prev + s));
 
-  const logWorkout = async () => {
-    setLogging(true);
-    setLogMsg("");
-    const prs: string[] = [];
+  // Keep notes/RPE in sync with the active day's saved session — but never
+  // clobber a day the user is actively editing.
+  useEffect(() => {
+    if (!hydrated) return;
+    if (touchedDays.current.has(day.id)) return;
+    const today = localDateString();
+    const todays = sessions.find(
+      (s) => s.day_id === day.id && s.log_date === today
+    );
+    setNotes(todays?.notes ?? "");
+    setRpe(todays?.rpe != null ? String(todays.rpe) : "");
+  }, [day, sessions, hydrated]);
+
+  const autoSaveSession = useCallback(async () => {
+    if (!userId) return;
     const entries: SessionEntry[] = day.exercises.map((ex) => {
       const total = workingSetsOf(ex);
       const w = weights[ex.id] ? Number(weights[ex.id]) : null;
-      if (w !== null && w > (prByExercise[ex.id] ?? 0)) prs.push(ex.name);
       const repArr = (reps[ex.id] ?? [])
         .slice(0, total)
         .map((r) => (r === "" ? 0 : Number(r)));
       return { exercise_id: ex.id, name: ex.name, weight: w, unit, reps: repArr };
     });
+    if (!entries.some((e) => e.weight !== null)) return;
+    setSessionSync("saving");
     const { ok } = await saveSession(userId, day.id, entries, {
       notes: notes.trim() || null,
       rpe: rpe === "" ? null : Number(rpe),
     });
-    setLogging(false);
-    if (!ok) {
-      setLogMsg("Couldn't save — try again");
-    } else {
-      await loadSessions();
-      setNotes("");
-      setRpe("");
-      setLogMsg(
-        prs.length
-          ? `${day.title} logged ✓ · 🏆 New PR: ${prs.join(", ")}!`
-          : `${day.title} logged ✓`
-      );
-    }
-    setTimeout(() => setLogMsg(""), 6000);
-  };
+    setSessionSync(ok ? "saved" : "error");
+    if (ok) await loadSessions();
+  }, [userId, day, weights, reps, unit, notes, rpe, loadSessions]);
+
+  // Debounced auto-save: fires only after a real edit on the active day.
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!touchedDays.current.has(day.id)) return;
+    if (autoTimer.current) clearTimeout(autoTimer.current);
+    autoTimer.current = setTimeout(() => {
+      void autoSaveSession();
+    }, 1200);
+    return () => {
+      if (autoTimer.current) clearTimeout(autoTimer.current);
+    };
+  }, [weights, reps, notes, rpe, day, hydrated, autoSaveSession]);
 
   return (
     <main className="page">
@@ -362,7 +385,10 @@ export default function Tracker() {
             <select
               id="rpe"
               value={rpe}
-              onChange={(e) => setRpe(e.target.value)}
+              onChange={(e) => {
+                touchedDays.current.add(activeDay);
+                setRpe(e.target.value);
+              }}
             >
               <option value="">—</option>
               {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
@@ -376,16 +402,22 @@ export default function Tracker() {
             className="notes-field"
             placeholder="Session notes — how did it feel?"
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={(e) => {
+              touchedDays.current.add(activeDay);
+              setNotes(e.target.value);
+            }}
             rows={2}
           />
         </div>
 
         <div className="log-row">
-          <button className="log-btn" onClick={logWorkout} disabled={logging}>
-            {logging ? "Saving…" : `Log this ${day.title}`}
-          </button>
-          {logMsg && <span className="log-msg">{logMsg}</span>}
+          <span className={`autosave ${sessionSync}`}>
+            {sessionSync === "saving" && "Saving…"}
+            {sessionSync === "saved" && "Saved automatically ✓"}
+            {sessionSync === "error" && "Couldn't save — check your connection"}
+            {sessionSync === "idle" &&
+              "Your weights save automatically as you log them"}
+          </span>
         </div>
       </section>
 
