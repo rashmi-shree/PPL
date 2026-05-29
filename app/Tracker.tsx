@@ -524,6 +524,18 @@ function ExerciseCard({
       <div className="weight">
         <label htmlFor={`w-${exercise.id}`}>Current weight</label>
         <div className="weight-input">
+          <button
+            type="button"
+            className="step-btn"
+            aria-label={`Decrease by ${inc} ${unit}`}
+            onClick={() =>
+              onWeight(
+                String(Math.max(0, +(((weightNum ?? 0) - inc).toFixed(2))))
+              )
+            }
+          >
+            −
+          </button>
           <input
             id={`w-${exercise.id}`}
             type="text"
@@ -533,6 +545,16 @@ function ExerciseCard({
             onChange={(e) => onWeight(e.target.value)}
           />
           <span className="unit">{unit}</span>
+          <button
+            type="button"
+            className="step-btn"
+            aria-label={`Increase by ${inc} ${unit}`}
+            onClick={() =>
+              onWeight(String(+(((weightNum ?? 0) + inc).toFixed(2))))
+            }
+          >
+            +
+          </button>
         </div>
       </div>
 
