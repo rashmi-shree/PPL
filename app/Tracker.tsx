@@ -559,11 +559,9 @@ function ExerciseCard({
           <button
             type="button"
             className="step-btn"
-            aria-label={`Decrease by ${inc} ${unit}`}
+            aria-label={`Decrease by 1 ${unit}`}
             onClick={() =>
-              onWeight(
-                String(Math.max(0, +(((weightNum ?? 0) - inc).toFixed(2))))
-              )
+              onWeight(String(Math.max(0, +(((weightNum ?? 0) - 1).toFixed(2)))))
             }
           >
             −
@@ -580,9 +578,9 @@ function ExerciseCard({
           <button
             type="button"
             className="step-btn"
-            aria-label={`Increase by ${inc} ${unit}`}
+            aria-label={`Increase by 1 ${unit}`}
             onClick={() =>
-              onWeight(String(+(((weightNum ?? 0) + inc).toFixed(2))))
+              onWeight(String(+(((weightNum ?? 0) + 1).toFixed(2))))
             }
           >
             +
