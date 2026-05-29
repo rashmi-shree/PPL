@@ -62,7 +62,7 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--border);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: max(env(safe-area-inset-bottom), 8px);
 }
 
 .tabbar-inner {
@@ -85,7 +85,9 @@ body {
   color: var(--muted);
   font-size: 0.64rem;
   font-weight: 600;
-  padding: 9px 6px;
+  padding: 10px 6px;
+  min-height: 52px;
+  justify-content: center;
   flex: 1;
   transition: color 0.15s ease;
 }
