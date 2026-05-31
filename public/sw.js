@@ -1,4 +1,4 @@
-const CACHE = "ppl-cache-v8";
+const CACHE = "ppl-cache-v9";
 
 self.addEventListener("install", () => {
   self.skipWaiting();

@@ -128,6 +128,7 @@ export default function Tracker() {
   const [formVideo, setFormVideo] = useState<{
     id: string;
     name: string;
+    vertical?: boolean;
   } | null>(null);
 
   const loadSessions = useCallback(async () => {
@@ -397,7 +398,12 @@ export default function Tracker() {
               onRest={() => startRest(restSecondsOf(ex))}
               onForm={
                 ex.video
-                  ? () => setFormVideo({ id: ex.video!, name: ex.name })
+                  ? () =>
+                      setFormVideo({
+                        id: ex.video!,
+                        name: ex.name,
+                        vertical: ex.videoVertical,
+                      })
                   : undefined
               }
             />
@@ -510,7 +516,7 @@ function FormVideoModal({
   video,
   onClose,
 }: {
-  video: { id: string; name: string };
+  video: { id: string; name: string; vertical?: boolean };
   onClose: () => void;
 }) {
   useEffect(() => {
@@ -527,14 +533,17 @@ function FormVideoModal({
 
   return (
     <div className="video-overlay" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="video-sheet" onClick={(e) => e.stopPropagation()}>
+      <div
+        className={`video-sheet${video.vertical ? " vertical" : ""}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="video-head">
           <span className="video-title">{video.name} — form</span>
           <button className="video-close" onClick={onClose} aria-label="Close">
             ✕
           </button>
         </div>
-        <div className="video-frame">
+        <div className={`video-frame${video.vertical ? " vertical" : ""}`}>
           <iframe
             src={`https://www.youtube-nocookie.com/embed/${video.id}?rel=0&playsinline=1`}
             title={`${video.name} form demo`}

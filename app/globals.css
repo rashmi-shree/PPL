@@ -1159,6 +1159,18 @@ body::before {
   background: #000;
 }
 
+/* Portrait (Shorts) clips */
+.video-sheet.vertical {
+  max-width: 400px;
+}
+
+.video-frame.vertical {
+  width: auto;
+  aspect-ratio: 9 / 16;
+  height: min(70vh, 560px);
+  margin: 0 auto;
+}
+
 .video-frame iframe {
   position: absolute;
   inset: 0;

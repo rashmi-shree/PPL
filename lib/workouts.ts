@@ -8,6 +8,8 @@ export type Exercise = {
   note?: string;
   // YouTube video ID for a form-demo clip.
   video?: string;
+  // True for vertical (Shorts) clips so the player uses a portrait frame.
+  videoVertical?: boolean;
 };
 
 export type WorkoutDay = {
@@ -48,6 +50,7 @@ export const workouts: WorkoutDay[] = [
         id: "push-bench",
         name: "Bench Press",
         video: "hWbUlkb5Ms4",
+        videoVertical: true,
         sets: "3",
         reps: "7–8 (1 warm-up × 10)",
         rest: "3 min",
