@@ -124,6 +124,12 @@ export default function Tracker() {
   const [restLeft, setRestLeft] = useState<number | null>(null);
   const restRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Form-demo video modal
+  const [formVideo, setFormVideo] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
   const loadSessions = useCallback(async () => {
     const data = await getSessions(userId);
     setSessions(data);
@@ -389,6 +395,11 @@ export default function Tracker() {
               onWeight={(idx, v) => setWeight(ex.id, idx, v, workingSetsOf(ex))}
               onRep={(idx, v) => setRep(ex.id, idx, v, workingSetsOf(ex))}
               onRest={() => startRest(restSecondsOf(ex))}
+              onForm={
+                ex.video
+                  ? () => setFormVideo({ id: ex.video!, name: ex.name })
+                  : undefined
+              }
             />
           ))}
         </ul>
@@ -480,6 +491,10 @@ export default function Tracker() {
         </div>
       )}
 
+      {formVideo && (
+        <FormVideoModal video={formVideo} onClose={() => setFormVideo(null)} />
+      )}
+
       <Nav />
     </main>
   );
@@ -489,6 +504,55 @@ function formatClock(total: number) {
   const m = Math.floor(total / 60);
   const s = total % 60;
   return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function FormVideoModal({
+  video,
+  onClose,
+}: {
+  video: { id: string; name: string };
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  return (
+    <div className="video-overlay" onClick={onClose} role="dialog" aria-modal="true">
+      <div className="video-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="video-head">
+          <span className="video-title">{video.name} — form</span>
+          <button className="video-close" onClick={onClose} aria-label="Close">
+            ✕
+          </button>
+        </div>
+        <div className="video-frame">
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${video.id}?rel=0&playsinline=1`}
+            title={`${video.name} form demo`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+          />
+        </div>
+        <a
+          className="video-link"
+          href={`https://www.youtube.com/watch?v=${video.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Open in YouTube ↗
+        </a>
+      </div>
+    </div>
+  );
 }
 
 function SyncBadge({ sync }: { sync: SyncState }) {
@@ -513,6 +577,7 @@ function ExerciseCard({
   onWeight,
   onRep,
   onRest,
+  onForm,
 }: {
   index: number;
   exercise: Exercise;
@@ -524,6 +589,7 @@ function ExerciseCard({
   onWeight: (setIdx: number, v: string) => void;
   onRep: (idx: number, v: string) => void;
   onRest: () => void;
+  onForm?: () => void;
 }) {
   const total = Number(exercise.sets) || 3;
   const target = exercise.type === "compound" ? 8 : 12;
@@ -579,6 +645,11 @@ function ExerciseCard({
             <button className="rest-trigger" onClick={onRest} type="button">
               ⏱ Rest {exercise.rest}
             </button>
+            {onForm && (
+              <button className="form-trigger" onClick={onForm} type="button">
+                ▶ Form
+              </button>
+            )}
           </div>
           {exercise.note && <p className="card-note">{exercise.note}</p>}
         </div>

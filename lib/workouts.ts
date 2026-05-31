@@ -6,6 +6,8 @@ export type Exercise = {
   rest: string;
   type: "compound" | "accessory";
   note?: string;
+  // YouTube video ID for a form-demo clip.
+  video?: string;
 };
 
 export type WorkoutDay = {
@@ -45,6 +47,7 @@ export const workouts: WorkoutDay[] = [
       {
         id: "push-bench",
         name: "Bench Press",
+        video: "-MAABwVKxok",
         sets: "3",
         reps: "7–8 (1 warm-up × 10)",
         rest: "3 min",
@@ -53,6 +56,7 @@ export const workouts: WorkoutDay[] = [
       {
         id: "push-incline",
         name: "Incline Bench Press",
+        video: "SrqOu55lrYU",
         sets: "3",
         reps: "7–8",
         rest: "3 min",
@@ -61,6 +65,7 @@ export const workouts: WorkoutDay[] = [
       {
         id: "push-dips",
         name: "Dips",
+        video: "RtCARlkWnuw",
         sets: "3",
         reps: "7–8",
         rest: "3 min",
@@ -69,6 +74,7 @@ export const workouts: WorkoutDay[] = [
       {
         id: "push-tri-ext",
         name: "Overhead Triceps Extension",
+        video: "-Vyt2QdsR7E",
         sets: "3",
         reps: "10–12",
         rest: "2 min",
@@ -77,6 +83,7 @@ export const workouts: WorkoutDay[] = [
       {
         id: "push-jm",
         name: "JM Press",
+        video: "hOCW9cE-GJg",
         sets: "3",
         reps: "10–12",
         rest: "2 min",
@@ -92,6 +99,7 @@ export const workouts: WorkoutDay[] = [
       {
         id: "pull-lat",
         name: "Lat Pulldown / Assisted Pull-Up",
+        video: "SALxEARiMkw",
         sets: "3",
         reps: "7–8 (1 warm-up × 10)",
         rest: "3 min",
@@ -101,6 +109,7 @@ export const workouts: WorkoutDay[] = [
       {
         id: "pull-row",
         name: "Seated Row Machine",
+        video: "GZbfZ033f74",
         sets: "3",
         reps: "7–8",
         rest: "3 min",
@@ -110,6 +119,7 @@ export const workouts: WorkoutDay[] = [
       {
         id: "pull-back-ext",
         name: "Back Extension",
+        video: "hS8uaxb0yMQ",
         sets: "3",
         reps: "7–8",
         rest: "3 min",
@@ -118,6 +128,7 @@ export const workouts: WorkoutDay[] = [
       {
         id: "pull-preacher",
         name: "Preacher Curl / Bicep Curl Bench",
+        video: "fIWP-FRFNU0",
         sets: "3",
         reps: "10–12",
         rest: "2 min",
@@ -126,6 +137,7 @@ export const workouts: WorkoutDay[] = [
       {
         id: "pull-hammer",
         name: "Hammer Curls",
+        video: "8XLxfXROrTo",
         sets: "3",
         reps: "10–12",
         rest: "2 min",
@@ -141,6 +153,7 @@ export const workouts: WorkoutDay[] = [
       {
         id: "legs-ext",
         name: "Leg Extension",
+        video: "i1m7xGSpPbg",
         sets: "3",
         reps: "7–8 (1 warm-up × 10)",
         rest: "3 min",
@@ -149,6 +162,7 @@ export const workouts: WorkoutDay[] = [
       {
         id: "legs-squat",
         name: "Squats",
+        video: "gcNh17Ckjgg",
         sets: "3",
         reps: "7–8",
         rest: "3 min",
@@ -157,6 +171,7 @@ export const workouts: WorkoutDay[] = [
       {
         id: "legs-curl",
         name: "Leg Curl",
+        video: "SbSNUXPRkc8",
         sets: "3",
         reps: "7–8",
         rest: "3 min",
@@ -165,6 +180,7 @@ export const workouts: WorkoutDay[] = [
       {
         id: "legs-standing-calf",
         name: "Standing Calf Raises",
+        video: "YMmgqO8Jo-k",
         sets: "3",
         reps: "10–12",
         rest: "2 min",
@@ -173,6 +189,7 @@ export const workouts: WorkoutDay[] = [
       {
         id: "legs-seated-calf",
         name: "Seated Calf Raises",
+        video: "pz66Bw6HJ4s",
         sets: "3",
         reps: "10–12",
         rest: "2 min",
