@@ -47,7 +47,7 @@ export const workouts: WorkoutDay[] = [
       {
         id: "push-bench",
         name: "Bench Press",
-        video: "-MAABwVKxok",
+        video: "hWbUlkb5Ms4",
         sets: "3",
         reps: "7–8 (1 warm-up × 10)",
         rest: "3 min",
