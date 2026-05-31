@@ -86,28 +86,57 @@ export default function HistoryPage() {
     await load();
   };
 
-  const setDraftEntry = (
-    idx: number,
+  const setDraftSet = (
+    entryIdx: number,
+    setIdx: number,
     field: "weight" | "reps",
     value: string
   ) => {
     setDraft((prev) => {
       if (!prev) return prev;
       const entries = prev.entries.map((e, i) => {
-        if (i !== idx) return e;
+        if (i !== entryIdx) return e;
+        const total = Math.max(
+          e.weights?.length ?? 0,
+          e.reps?.length ?? 0,
+          setIdx + 1
+        );
         if (field === "weight") {
           const clean = value.replace(/[^0-9.]/g, "");
-          return { ...e, weight: clean === "" ? null : Number(clean) };
+          const wArr = Array.from(
+            { length: total },
+            (_, k) => e.weights?.[k] ?? null
+          );
+          wArr[setIdx] = clean === "" ? null : Number(clean);
+          const top = wArr.reduce<number | null>(
+            (m, x) => (x === null ? m : m === null ? x : Math.max(m, x)),
+            null
+          );
+          return { ...e, weights: wArr, weight: top };
         }
-        const reps = value
-          .split(/[^0-9]+/)
-          .filter(Boolean)
-          .map(Number);
-        return { ...e, reps };
+        const clean = value.replace(/[^0-9]/g, "");
+        const rArr = Array.from({ length: total }, (_, k) => e.reps?.[k] ?? 0);
+        rArr[setIdx] = clean === "" ? 0 : Number(clean);
+        return { ...e, reps: rArr };
       });
       return { ...prev, entries };
     });
   };
+
+  const formatEntry = (e: SessionEntry) => {
+    const rs = e.reps ?? [];
+    if (e.weights && e.weights.length) {
+      return e.weights
+        .map((w, i) => `${w ?? "—"}×${rs[i] ?? "—"}`)
+        .join(" · ");
+    }
+    if (e.weight === null || e.weight === undefined) return "—";
+    const repsStr = rs.some((r) => r > 0) ? ` × ${rs.join("/")}` : "";
+    return `${e.weight}${repsStr}`;
+  };
+
+  const setCount = (e: SessionEntry) =>
+    Math.max(e.weights?.length ?? 0, e.reps?.length ?? 0, 1);
 
   return (
     <main className="page">
@@ -161,47 +190,46 @@ export default function HistoryPage() {
                 </div>
 
                 <ul className="session-entries">
-                  {view.entries.map((e: SessionEntry, idx) => {
-                    const repsStr =
-                      e.reps && e.reps.some((r) => r > 0)
-                        ? e.reps.join("/")
-                        : "";
-                    return (
-                      <li key={e.exercise_id}>
-                        <span className="entry-name">{e.name}</span>
-                        {editing ? (
-                          <span className="entry-edit">
-                            <input
-                              className="edit-weight"
-                              inputMode="decimal"
-                              value={e.weight ?? ""}
-                              onChange={(ev) =>
-                                setDraftEntry(idx, "weight", ev.target.value)
-                              }
-                              placeholder="wt"
-                            />
-                            <input
-                              className="edit-reps"
-                              inputMode="numeric"
-                              value={repsStr}
-                              onChange={(ev) =>
-                                setDraftEntry(idx, "reps", ev.target.value)
-                              }
-                              placeholder="reps"
-                            />
-                          </span>
-                        ) : (
-                          <span className="entry-weight">
-                            {e.weight !== null && e.weight !== undefined
-                              ? `${e.weight} ${e.unit}${
-                                  repsStr ? ` × ${repsStr}` : ""
-                                }`
-                              : "—"}
-                          </span>
-                        )}
-                      </li>
-                    );
-                  })}
+                  {view.entries.map((e: SessionEntry, idx) => (
+                    <li key={e.exercise_id}>
+                      <span className="entry-name">{e.name}</span>
+                      {editing ? (
+                        <div className="entry-sets">
+                          {Array.from({ length: setCount(e) }, (_, si) => (
+                            <div className="entry-set" key={si}>
+                              <span className="entry-set-no">{si + 1}</span>
+                              <input
+                                className="edit-weight"
+                                inputMode="decimal"
+                                value={e.weights?.[si] ?? ""}
+                                onChange={(ev) =>
+                                  setDraftSet(idx, si, "weight", ev.target.value)
+                                }
+                                placeholder="wt"
+                              />
+                              <span className="entry-x">×</span>
+                              <input
+                                className="edit-reps"
+                                inputMode="numeric"
+                                value={e.reps?.[si] ? String(e.reps[si]) : ""}
+                                onChange={(ev) =>
+                                  setDraftSet(idx, si, "reps", ev.target.value)
+                                }
+                                placeholder="reps"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="entry-weight">
+                          {formatEntry(e)}
+                          {e.weight !== null && e.weight !== undefined
+                            ? ` ${e.unit}`
+                            : ""}
+                        </span>
+                      )}
+                    </li>
+                  ))}
                 </ul>
 
                 {editing ? (

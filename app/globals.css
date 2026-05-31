@@ -632,6 +632,32 @@ body::before {
   gap: 6px;
 }
 
+.entry-sets {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.entry-set {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.entry-set-no {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  width: 16px;
+  text-align: center;
+}
+
+.entry-x {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 .edit-weight,
 .edit-reps {
   width: 64px;
@@ -820,7 +846,7 @@ body::before {
 
 .session-entries li {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   font-size: 0.9rem;
@@ -1239,6 +1265,77 @@ body::before {
   font-size: 0.85rem;
   font-weight: 600;
   padding-right: 2px;
+}
+
+/* Per-set logging table */
+.sets {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sets-head {
+  display: grid;
+  grid-template-columns: 28px 1fr 64px;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.sets-head .col-weight {
+  text-align: center;
+}
+
+.sets-head .col-reps {
+  text-align: center;
+}
+
+.set-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 64px;
+  gap: 8px;
+  align-items: center;
+}
+
+.set-no {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+/* In the per-set grid the weight stepper fills its column */
+.set-row .weight-input {
+  width: 100%;
+}
+
+.set-reps {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 10px 0;
+  outline: none;
+}
+
+.set-reps:focus {
+  border-color: var(--accent);
 }
 
 /* Cardio */

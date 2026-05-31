@@ -3,9 +3,12 @@ import { supabase } from "@/lib/supabase";
 export type SessionEntry = {
   exercise_id: string;
   name: string;
+  // Top-set weight — kept for charts/PRs and backward compatibility.
   weight: number | null;
   unit: string;
   reps?: number[];
+  // Per-set weights (parallel to reps). Optional for older sessions.
+  weights?: (number | null)[];
 };
 
 export type WorkoutSession = {

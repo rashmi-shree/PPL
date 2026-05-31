@@ -8,7 +8,7 @@ import {
   progressionRules,
   type Exercise,
 } from "@/lib/workouts";
-import { supabase, isSupabaseEnabled, type WeightRow } from "@/lib/supabase";
+import { isSupabaseEnabled } from "@/lib/supabase";
 import {
   saveSession,
   getSessions,
@@ -23,9 +23,21 @@ import Nav from "./Nav";
 const STORAGE_KEY = "ppl-weights-v1";
 const REPS_KEY = "ppl-reps-v1";
 
-type WeightMap = Record<string, string>;
+type WeightMap = Record<string, string[]>;
 type RepsMap = Record<string, string[]>;
 type SyncState = "idle" | "saving" | "saved" | "error" | "local";
+
+// Accepts the old single-string-per-exercise shape and the new per-set arrays.
+function normalizeWeights(raw: unknown): WeightMap {
+  const out: WeightMap = {};
+  if (raw && typeof raw === "object") {
+    for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+      if (Array.isArray(v)) out[k] = v.map((x) => String(x ?? ""));
+      else if (v != null && v !== "") out[k] = [String(v)];
+    }
+  }
+  return out;
+}
 
 function weightsKey(userId?: string) {
   return userId ? `${STORAGE_KEY}-${userId}` : STORAGE_KEY;
@@ -103,7 +115,6 @@ export default function Tracker() {
   const [notes, setNotes] = useState("");
   const [rpe, setRpe] = useState("");
 
-  const pending = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   // Days the user has actually edited this visit (gates auto-save so merely
   // opening/browsing a day never creates an empty history entry).
   const touchedDays = useRef<Set<string>>(new Set());
@@ -119,37 +130,44 @@ export default function Tracker() {
   }, [userId]);
 
   useEffect(() => {
-    setWeights(loadJson<WeightMap>(weightsKey(userId), {}));
+    setWeights(normalizeWeights(loadJson<unknown>(weightsKey(userId), {})));
     setReps(loadJson<RepsMap>(repsKeyFor(userId), {}));
     const savedUnit = window.localStorage.getItem("ppl-unit");
     if (savedUnit === "kg" || savedUnit === "lb") setUnit(savedUnit);
     setHydrated(true);
 
-    loadSessions();
-
-    if (!supabase || !userId) return;
     (async () => {
-      const { data, error } = await supabase
-        .from("exercise_weights")
-        .select("exercise_id, weight, unit");
-      if (error) {
-        setSync("error");
-        return;
-      }
-      if (data) {
-        setWeights((prev) => {
-          const merged = { ...prev };
-          (data as WeightRow[]).forEach((row) => {
-            if (row.weight !== null && row.weight !== undefined) {
-              merged[row.exercise_id] = String(row.weight);
+      const data = await getSessions(userId);
+      setSessions(data);
+
+      // Restore today's per-set weights/reps so reopening mid-day shows them.
+      const today = localDateString();
+      const wMerge: WeightMap = {};
+      const rMerge: RepsMap = {};
+      data
+        .filter((s) => s.log_date === today)
+        .forEach((s) =>
+          s.entries.forEach((e) => {
+            if (e.weights && e.weights.length) {
+              wMerge[e.exercise_id] = e.weights.map((x) =>
+                x === null || x === undefined ? "" : String(x)
+              );
+            } else if (e.weight !== null && e.weight !== undefined) {
+              wMerge[e.exercise_id] = [String(e.weight)];
             }
-          });
-          return merged;
-        });
-        setSync("saved");
-      }
+            if (e.reps && e.reps.length) {
+              rMerge[e.exercise_id] = e.reps.map((x) => (x ? String(x) : ""));
+            }
+          })
+        );
+      if (Object.keys(wMerge).length)
+        setWeights((prev) => ({ ...prev, ...wMerge }));
+      if (Object.keys(rMerge).length)
+        setReps((prev) => ({ ...prev, ...rMerge }));
+      setSync(isSupabaseEnabled ? "saved" : "local");
     })();
-  }, [userId, loadSessions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -204,31 +222,15 @@ export default function Tracker() {
     return map;
   }, [sessions]);
 
-  const upsertToCloud = (exerciseId: string, value: string) => {
-    if (!supabase || !userId) return;
-    if (pending.current[exerciseId]) clearTimeout(pending.current[exerciseId]);
-    setSync("saving");
-    pending.current[exerciseId] = setTimeout(async () => {
-      const weight = value === "" ? null : Number(value);
-      const { error } = await supabase!.from("exercise_weights").upsert(
-        {
-          user_id: userId,
-          exercise_id: exerciseId,
-          weight,
-          unit,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,exercise_id" }
-      );
-      setSync(error ? "error" : "saved");
-    }, 600);
-  };
-
-  const setWeight = (id: string, value: string) => {
+  const setWeight = (id: string, setIdx: number, value: string, total: number) => {
     const clean = value.replace(/[^0-9.]/g, "");
     touchedDays.current.add(activeDay);
-    setWeights((prev) => ({ ...prev, [id]: clean }));
-    upsertToCloud(id, clean);
+    setWeights((prev) => {
+      const arr = [...(prev[id] ?? Array(total).fill(""))];
+      while (arr.length < total) arr.push("");
+      arr[setIdx] = clean;
+      return { ...prev, [id]: arr };
+    });
   };
 
   const setRep = (id: string, setIdx: number, value: string, total: number) => {
@@ -283,19 +285,36 @@ export default function Tracker() {
     if (!userId) return;
     const entries: SessionEntry[] = day.exercises.map((ex) => {
       const total = workingSetsOf(ex);
-      const w = weights[ex.id] ? Number(weights[ex.id]) : null;
-      const repArr = (reps[ex.id] ?? [])
-        .slice(0, total)
-        .map((r) => (r === "" ? 0 : Number(r)));
-      return { exercise_id: ex.id, name: ex.name, weight: w, unit, reps: repArr };
+      const weightsArr = Array.from({ length: total }, (_, i) => {
+        const v = (weights[ex.id] ?? [])[i];
+        return v === undefined || v === "" ? null : Number(v);
+      });
+      const repArr = Array.from({ length: total }, (_, i) => {
+        const v = (reps[ex.id] ?? [])[i];
+        return v === undefined || v === "" ? 0 : Number(v);
+      });
+      const top = weightsArr.reduce<number | null>(
+        (m, x) => (x === null ? m : m === null ? x : Math.max(m, x)),
+        null
+      );
+      return {
+        exercise_id: ex.id,
+        name: ex.name,
+        weight: top,
+        unit,
+        reps: repArr,
+        weights: weightsArr,
+      };
     });
     if (!entries.some((e) => e.weight !== null)) return;
     setSessionSync("saving");
+    setSync("saving");
     const { ok } = await saveSession(userId, day.id, entries, {
       notes: notes.trim() || null,
       rpe: rpe === "" ? null : Number(rpe),
     });
     setSessionSync(ok ? "saved" : "error");
+    setSync(ok ? "saved" : "error");
     if (ok) await loadSessions();
   }, [userId, day, weights, reps, unit, notes, rpe, loadSessions]);
 
@@ -363,11 +382,11 @@ export default function Tracker() {
               index={i + 1}
               exercise={ex}
               unit={unit}
-              weight={weights[ex.id] ?? ""}
+              weights={weights[ex.id] ?? []}
               reps={reps[ex.id] ?? []}
               last={lastByExercise.map[ex.id]}
               prBest={prByExercise[ex.id]}
-              onWeight={(v) => setWeight(ex.id, v)}
+              onWeight={(idx, v) => setWeight(ex.id, idx, v, workingSetsOf(ex))}
               onRep={(idx, v) => setRep(ex.id, idx, v, workingSetsOf(ex))}
               onRest={() => startRest(restSecondsOf(ex))}
             />
@@ -487,7 +506,7 @@ function ExerciseCard({
   index,
   exercise,
   unit,
-  weight,
+  weights,
   reps,
   last,
   prBest,
@@ -498,33 +517,45 @@ function ExerciseCard({
   index: number;
   exercise: Exercise;
   unit: string;
-  weight: string;
+  weights: string[];
   reps: string[];
   last?: SessionEntry;
   prBest?: number;
-  onWeight: (v: string) => void;
+  onWeight: (setIdx: number, v: string) => void;
   onRep: (idx: number, v: string) => void;
   onRest: () => void;
 }) {
   const total = Number(exercise.sets) || 3;
   const target = exercise.type === "compound" ? 8 : 12;
   const inc = unit === "lb" ? 5 : 2.5;
-  const weightNum = weight === "" ? null : Number(weight);
 
+  const weightsFilled = Array.from({ length: total }, (_, i) => weights[i] ?? "");
   const repsFilled = Array.from({ length: total }, (_, i) => reps[i] ?? "");
+
+  const topSet = weightsFilled.reduce<number | null>((m, v) => {
+    if (v === "") return m;
+    const n = Number(v);
+    return m === null ? n : Math.max(m, n);
+  }, null);
+
   const allHit =
-    weightNum !== null &&
+    weightsFilled.some((w) => w !== "") &&
     repsFilled.every((r) => r !== "" && Number(r) >= target);
 
-  const isPR = weightNum !== null && prBest != null && weightNum > prBest;
+  const isPR = topSet !== null && prBest != null && topSet > prBest;
 
   const lastText = (() => {
     if (!last) return null;
+    const rs = last.reps ?? [];
+    if (last.weights && last.weights.length) {
+      return (
+        last.weights
+          .map((w, i) => `${w ?? "—"}×${rs[i] ?? "—"}`)
+          .join(" · ") + ` ${last.unit}`
+      );
+    }
     if (last.weight === null || last.weight === undefined) return "—";
-    const repsStr =
-      last.reps && last.reps.length
-        ? ` × ${last.reps.join("/")}`
-        : "";
+    const repsStr = rs.length ? ` × ${rs.join("/")}` : "";
     return `${last.weight} ${last.unit}${repsStr}`;
   })();
 
@@ -553,68 +584,67 @@ function ExerciseCard({
         </div>
       </div>
 
-      <div className="weight">
-        <label htmlFor={`w-${exercise.id}`}>Current weight</label>
-        <div className="weight-input">
-          <button
-            type="button"
-            className="step-btn"
-            aria-label={`Decrease by 1 ${unit}`}
-            onClick={() =>
-              onWeight(String(Math.max(0, +(((weightNum ?? 0) - 1).toFixed(2)))))
-            }
-          >
-            −
-          </button>
-          <input
-            id={`w-${exercise.id}`}
-            type="text"
-            inputMode="decimal"
-            placeholder="0"
-            value={weight}
-            onChange={(e) => onWeight(e.target.value)}
-          />
-          <span className="unit">{unit}</span>
-          <button
-            type="button"
-            className="step-btn"
-            aria-label={`Increase by 1 ${unit}`}
-            onClick={() =>
-              onWeight(String(+(((weightNum ?? 0) + 1).toFixed(2))))
-            }
-          >
-            +
-          </button>
+      <div className="sets">
+        <div className="sets-head">
+          <span className="col-set">Set</span>
+          <span className="col-weight">Weight ({unit})</span>
+          <span className="col-reps">Reps</span>
         </div>
-      </div>
-
-      <div className="reps-row">
-        <span className="reps-label">Reps / set</span>
-        <div className="reps-inputs">
-          {repsFilled.map((r, i) => (
-            <input
-              key={i}
-              type="text"
-              inputMode="numeric"
-              placeholder={String(target)}
-              value={r}
-              onChange={(e) => onRep(i, e.target.value)}
-              aria-label={`Set ${i + 1} reps`}
-            />
-          ))}
-        </div>
+        {Array.from({ length: total }, (_, i) => {
+          const wv = weightsFilled[i];
+          const wn = wv === "" ? 0 : Number(wv);
+          return (
+            <div className="set-row" key={i}>
+              <span className="set-no">{i + 1}</span>
+              <div className="weight-input">
+                <button
+                  type="button"
+                  className="step-btn"
+                  aria-label={`Set ${i + 1}: decrease by 1`}
+                  onClick={() =>
+                    onWeight(i, String(Math.max(0, +((wn - 1).toFixed(2)))))
+                  }
+                >
+                  −
+                </button>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="0"
+                  value={wv}
+                  onChange={(e) => onWeight(i, e.target.value)}
+                  aria-label={`Set ${i + 1} weight`}
+                />
+                <button
+                  type="button"
+                  className="step-btn"
+                  aria-label={`Set ${i + 1}: increase by 1`}
+                  onClick={() => onWeight(i, String(+((wn + 1).toFixed(2))))}
+                >
+                  +
+                </button>
+              </div>
+              <input
+                className="set-reps"
+                type="text"
+                inputMode="numeric"
+                placeholder={String(target)}
+                value={repsFilled[i]}
+                onChange={(e) => onRep(i, e.target.value)}
+                aria-label={`Set ${i + 1} reps`}
+              />
+            </div>
+          );
+        })}
       </div>
 
       <div className="hints">
         <span className="last-time">
-          {last
-            ? `Last time: ${lastText}`
-            : "No previous session yet"}
+          {last ? `Last time: ${lastText}` : "No previous session yet"}
         </span>
-        {allHit && (
+        {allHit && topSet !== null && (
           <span className="nudge">
-            💪 Hit all {target} reps — try {(weightNum as number) + inc} {unit}{" "}
-            next time
+            💪 Hit all {target} reps — try {topSet + inc} {unit} next time
           </span>
         )}
       </div>
