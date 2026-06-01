@@ -11,8 +11,8 @@ Copy-paste these into the Play Console. Replace anything in [BRACKETS].
 - **Default language:** English (United States)
 - **App or game:** App
 - **Category:** Health & Fitness
-- **Contact email:** [your-support-email]
-- **Privacy policy URL:** https://[your-vercel-domain]/privacy
+- **Contact email:** rashmidivya.shree6@gmail.com
+- **Privacy policy URL:** https://ppl-nu-nine.vercel.app/privacy
 
 ---
 

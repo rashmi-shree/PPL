@@ -4,7 +4,7 @@ export const metadata = {
 };
 
 const UPDATED = "June 1, 2026";
-const CONTACT = "your-email@example.com"; // TODO: replace with your real support email
+const CONTACT = "rashmidivya.shree6@gmail.com";
 
 export default function PrivacyPage() {
   return (
