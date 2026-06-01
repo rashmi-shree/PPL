@@ -1,5 +1,8 @@
 import type { MetadataRoute } from "next";
 
+// Required so the manifest is emitted as a static file under `output: export`.
+export const dynamic = "force-static";
+
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "PPL Workout Tracker",

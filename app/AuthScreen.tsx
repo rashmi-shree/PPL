@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { Browser } from "@capacitor/browser";
 import { supabase } from "@/lib/supabase";
+import { isNative, oauthRedirect, resetRedirect } from "@/lib/native";
 
 type Mode = "signin" | "signup";
 
@@ -24,7 +26,7 @@ export default function AuthScreen() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: window.location.origin },
+        options: { emailRedirectTo: oauthRedirect() },
       });
       if (error) setError(error.message);
       else if (data.session)
@@ -43,11 +45,23 @@ export default function AuthScreen() {
   const google = async () => {
     if (!supabase) return;
     setError("");
-    const { error } = await supabase.auth.signInWithOAuth({
+    // On native we must drive the browser ourselves: skip Supabase's automatic
+    // redirect, open the returned URL in the system browser, and let the
+    // appUrlOpen deep-link listener (in AuthProvider) finish the sign-in.
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: {
+        redirectTo: oauthRedirect(),
+        skipBrowserRedirect: isNative(),
+      },
     });
-    if (error) setError(error.message);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    if (isNative() && data?.url) {
+      await Browser.open({ url: data.url });
+    }
   };
 
   const forgot = async () => {
@@ -59,7 +73,7 @@ export default function AuthScreen() {
       return;
     }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset`,
+      redirectTo: resetRedirect(),
     });
     setMsg(
       error ? error.message : "Password reset link sent — check your email."

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import AuthProvider from "./AuthProvider";
 import ServiceWorker from "./ServiceWorker";
+import NativeShell from "./NativeShell";
 
 export const metadata: Metadata = {
   title: "PPL Workout Tracker",
@@ -42,6 +43,7 @@ export default function RootLayout({
       <body>
         <AuthProvider>{children}</AuthProvider>
         <ServiceWorker />
+        <NativeShell />
       </body>
     </html>
   );

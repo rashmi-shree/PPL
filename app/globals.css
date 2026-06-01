@@ -1577,3 +1577,38 @@ body::before {
     font-size: 1.9rem;
   }
 }
+
+.legal {
+  max-width: 680px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+.legal h1 {
+  font-size: 1.6rem;
+  margin-bottom: 4px;
+}
+.legal h2 {
+  font-size: 1.1rem;
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+.legal p,
+.legal li {
+  color: var(--text, #e6e8ec);
+  font-size: 0.95rem;
+}
+.legal ul {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+.legal li {
+  margin: 6px 0;
+}
+.legal .muted {
+  color: var(--muted, #8a909c);
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+}
+.legal a {
+  color: #f2552c;
+}

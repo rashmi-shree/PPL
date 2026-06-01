@@ -2,6 +2,22 @@
 /.next
 /out
 /build
+
+# Capacitor / Android build artifacts
+/android/app/build
+/android/build
+/android/.gradle
+/android/captures
+/android/app/src/main/assets/public
+/android/app/src/main/assets/capacitor.config.json
+/android/app/src/main/assets/capacitor.plugins.json
+android/local.properties
+android/.idea
+
+# Android signing secrets - NEVER commit these
+android/keystore.properties
+android/*.jks
+android/*.keystore
 *.tsbuildinfo
 next-env.d.ts.bak
 .DS_Store
