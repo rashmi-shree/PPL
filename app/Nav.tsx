@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "./AuthProvider";
 import { getSessions } from "@/lib/sessions";
+import { isNative } from "@/lib/native";
+import { enableDailyReminder, disableDailyReminder } from "@/lib/notifications";
 
 function csvCell(v: unknown) {
   const s = String(v ?? "");
@@ -33,8 +35,24 @@ export default function Nav() {
     if (reminders) {
       localStorage.removeItem("ppl-reminders");
       setReminders(false);
+      if (isNative()) await disableDailyReminder();
       return;
     }
+
+    // Native: schedule a real daily 6 PM notification that fires even when
+    // the app is closed.
+    if (isNative()) {
+      const ok = await enableDailyReminder();
+      if (!ok) {
+        alert("Allow notifications to enable daily reminders.");
+        return;
+      }
+      localStorage.setItem("ppl-reminders", "on");
+      setReminders(true);
+      return;
+    }
+
+    // Web fallback: in-app/browser notifications while the app is open.
     if (!("Notification" in window)) {
       alert("Your browser doesn't support notifications.");
       return;
@@ -127,7 +145,7 @@ export default function Nav() {
             onClick={toggleReminders}
             type="button"
           >
-            {reminders ? "🔔 Reminders on" : "🔕 Enable reminders"}
+            {reminders ? "🔔 Daily reminder on (6 PM)" : "🔕 Enable daily reminder"}
           </button>
           <button className="signout" onClick={signOut} type="button">
             Sign out
