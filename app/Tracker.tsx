@@ -19,6 +19,8 @@ import {
 import { useAuth } from "./AuthProvider";
 import Reminders from "./Reminders";
 import Nav from "./Nav";
+import ChatLogger from "./ChatLogger";
+import type { ParsedSet } from "@/lib/chatParse";
 
 const STORAGE_KEY = "ppl-weights-v1";
 const REPS_KEY = "ppl-reps-v1";
@@ -248,6 +250,46 @@ export default function Tracker() {
       while (arr.length < total) arr.push("");
       arr[setIdx] = clean;
       return { ...prev, [id]: arr };
+    });
+  };
+
+  // Fill a whole exercise from the chat logger. Sets without an explicit
+  // weight carry forward the previous set's weight (common gym shorthand).
+  // The exercise may live on another day, so switch to it first.
+  const applyChatSets = (
+    dayId: string,
+    exerciseId: string,
+    parsedUnit: "kg" | "lb",
+    sets: ParsedSet[]
+  ) => {
+    const targetDay = workouts.find((w) => w.id === dayId);
+    const ex = targetDay?.exercises.find((e) => e.id === exerciseId);
+    if (!ex) return;
+    const total = workingSetsOf(ex);
+    if (parsedUnit !== unit) setUnit(parsedUnit);
+    if (dayId !== activeDay) setActiveDay(dayId);
+    touchedDays.current.add(dayId);
+
+    setWeights((prev) => {
+      const arr = [...(prev[exerciseId] ?? Array(total).fill(""))];
+      while (arr.length < total) arr.push("");
+      let carry = "";
+      sets.forEach((s) => {
+        const idx = (s.setNo || 0) - 1;
+        if (s.weight != null) carry = String(s.weight);
+        if (idx >= 0 && idx < total) arr[idx] = s.weight != null ? String(s.weight) : carry;
+      });
+      return { ...prev, [exerciseId]: arr };
+    });
+
+    setReps((prev) => {
+      const arr = [...(prev[exerciseId] ?? Array(total).fill(""))];
+      while (arr.length < total) arr.push("");
+      sets.forEach((s) => {
+        const idx = (s.setNo || 0) - 1;
+        if (idx >= 0 && idx < total && s.reps != null) arr[idx] = String(s.reps);
+      });
+      return { ...prev, [exerciseId]: arr };
     });
   };
 
@@ -500,6 +542,13 @@ export default function Tracker() {
       {formVideo && (
         <FormVideoModal video={formVideo} onClose={() => setFormVideo(null)} />
       )}
+
+      <ChatLogger
+        workouts={workouts}
+        activeDayId={activeDay}
+        unit={unit}
+        onApply={applyChatSets}
+      />
 
       <Nav />
     </main>

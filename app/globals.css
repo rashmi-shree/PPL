@@ -1612,3 +1612,219 @@ body::before {
 .legal a {
   color: #f2552c;
 }
+
+/* Chat logger */
+.chat-fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  z-index: 47;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 28px rgba(255, 90, 54, 0.45);
+  cursor: pointer;
+}
+.chat-fab:active {
+  transform: scale(0.94);
+}
+
+.chat-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.chat-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 61;
+  max-width: 480px;
+  margin: 0 auto;
+  height: min(82dvh, 700px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.chat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.chat-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.chat-head .sub {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.chat-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-msg {
+  max-width: 86%;
+  padding: 10px 13px;
+  border-radius: 14px;
+  font-size: 0.9rem;
+  line-height: 1.42;
+  white-space: pre-wrap;
+}
+.chat-msg.user {
+  align-self: flex-end;
+  background: var(--accent);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.chat-msg.bot {
+  align-self: flex-start;
+  background: var(--surface-2);
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+}
+
+.chat-card {
+  align-self: flex-start;
+  width: 90%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.chat-card-title {
+  font-weight: 700;
+  font-size: 0.92rem;
+  margin-bottom: 8px;
+}
+.chat-set {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 0.86rem;
+  padding: 3px 0;
+  font-variant-numeric: tabular-nums;
+}
+.chat-set .lbl {
+  color: var(--muted);
+}
+.chat-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.chat-btn {
+  flex: 1;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.chat-btn.primary {
+  background: var(--accent);
+  color: #fff;
+}
+.chat-btn.ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.chat-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chat-chip {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 8px 13px;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.chat-chip:active {
+  transform: scale(0.97);
+}
+.chat-chip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.chat-done {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #46c98b;
+}
+.chat-done.cancelled {
+  color: var(--muted);
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+}
+.chat-input-row input {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 11px 14px;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+.chat-input-row input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.chat-send {
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 12px;
+  padding: 0 16px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.chat-send:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

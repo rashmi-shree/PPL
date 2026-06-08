@@ -10,6 +10,8 @@ export type Exercise = {
   video?: string;
   // True for vertical (Shorts) clips so the player uses a portrait frame.
   videoVertical?: boolean;
+  // Spoken/typed names the chat logger should recognise for this exercise.
+  aliases?: string[];
 };
 
 export type WorkoutDay = {
@@ -55,6 +57,14 @@ export const workouts: WorkoutDay[] = [
         reps: "7–8 (1 warm-up × 10)",
         rest: "3 min",
         type: "compound",
+        aliases: [
+          "bench",
+          "bench press",
+          "chest press",
+          "flat bench",
+          "flat bench press",
+          "barbell bench",
+        ],
       },
       {
         id: "push-incline",
@@ -64,6 +74,13 @@ export const workouts: WorkoutDay[] = [
         reps: "7–8",
         rest: "3 min",
         type: "compound",
+        aliases: [
+          "incline",
+          "incline bench",
+          "incline bench press",
+          "incline press",
+          "incline chest press",
+        ],
       },
       {
         id: "push-dips",
@@ -73,6 +90,7 @@ export const workouts: WorkoutDay[] = [
         reps: "7–8",
         rest: "3 min",
         type: "compound",
+        aliases: ["dip", "dips", "chest dips", "tricep dips"],
       },
       {
         id: "push-tri-ext",
@@ -82,6 +100,14 @@ export const workouts: WorkoutDay[] = [
         reps: "10–12",
         rest: "2 min",
         type: "accessory",
+        aliases: [
+          "triceps extension",
+          "tricep extension",
+          "overhead extension",
+          "overhead tricep",
+          "overhead triceps",
+          "overhead tricep extension",
+        ],
       },
       {
         id: "push-jm",
@@ -91,6 +117,7 @@ export const workouts: WorkoutDay[] = [
         reps: "10–12",
         rest: "2 min",
         type: "accessory",
+        aliases: ["jm", "jm press", "jm bench"],
       },
     ],
   },
@@ -108,6 +135,17 @@ export const workouts: WorkoutDay[] = [
         rest: "3 min",
         type: "compound",
         note: "Alternate between exercises if desired.",
+        aliases: [
+          "lat pulldown",
+          "pulldown",
+          "lat pull down",
+          "pull up",
+          "pullup",
+          "pull ups",
+          "assisted pull up",
+          "lats",
+          "lat",
+        ],
       },
       {
         id: "pull-row",
@@ -118,6 +156,14 @@ export const workouts: WorkoutDay[] = [
         rest: "3 min",
         type: "compound",
         note: "Upper back focus.",
+        aliases: [
+          "row",
+          "rows",
+          "seated row",
+          "cable row",
+          "machine row",
+          "seated row machine",
+        ],
       },
       {
         id: "pull-back-ext",
@@ -127,6 +173,7 @@ export const workouts: WorkoutDay[] = [
         reps: "7–8",
         rest: "3 min",
         type: "compound",
+        aliases: ["back extension", "back extensions", "hyperextension", "hyper"],
       },
       {
         id: "pull-preacher",
@@ -136,6 +183,14 @@ export const workouts: WorkoutDay[] = [
         reps: "10–12",
         rest: "2 min",
         type: "accessory",
+        aliases: [
+          "preacher curl",
+          "preacher",
+          "bicep curl",
+          "biceps curl",
+          "bicep curls",
+          "curl bench",
+        ],
       },
       {
         id: "pull-hammer",
@@ -145,6 +200,7 @@ export const workouts: WorkoutDay[] = [
         reps: "10–12",
         rest: "2 min",
         type: "accessory",
+        aliases: ["hammer curl", "hammer curls", "hammers", "hammer"],
       },
     ],
   },
@@ -161,6 +217,12 @@ export const workouts: WorkoutDay[] = [
         reps: "7–8 (1 warm-up × 10)",
         rest: "3 min",
         type: "compound",
+        aliases: [
+          "leg extension",
+          "leg extensions",
+          "quad extension",
+          "knee extension",
+        ],
       },
       {
         id: "legs-squat",
@@ -170,6 +232,7 @@ export const workouts: WorkoutDay[] = [
         reps: "7–8",
         rest: "3 min",
         type: "compound",
+        aliases: ["squat", "squats", "barbell squat", "back squat"],
       },
       {
         id: "legs-curl",
@@ -179,6 +242,13 @@ export const workouts: WorkoutDay[] = [
         reps: "7–8",
         rest: "3 min",
         type: "compound",
+        aliases: [
+          "leg curl",
+          "leg curls",
+          "hamstring curl",
+          "ham curl",
+          "lying leg curl",
+        ],
       },
       {
         id: "legs-standing-calf",
@@ -188,6 +258,12 @@ export const workouts: WorkoutDay[] = [
         reps: "10–12",
         rest: "2 min",
         type: "accessory",
+        aliases: [
+          "standing calf",
+          "standing calf raise",
+          "standing calf raises",
+          "standing calves",
+        ],
       },
       {
         id: "legs-seated-calf",
@@ -197,6 +273,12 @@ export const workouts: WorkoutDay[] = [
         reps: "10–12",
         rest: "2 min",
         type: "accessory",
+        aliases: [
+          "seated calf",
+          "seated calf raise",
+          "seated calf raises",
+          "seated calves",
+        ],
       },
     ],
   },
