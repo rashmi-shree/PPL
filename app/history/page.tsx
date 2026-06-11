@@ -11,6 +11,7 @@ import {
 } from "@/lib/sessions";
 import { useAuth } from "../AuthProvider";
 import Nav from "../Nav";
+import NotificationBell from "../NotificationBell";
 
 const dayMeta: Record<string, { title: string; short: string }> = {
   push: { title: "Push Day", short: "Push" },
@@ -145,6 +146,9 @@ export default function HistoryPage() {
           <div>
             <h1 className="title">History</h1>
             <p className="tagline">Your logged workouts, newest first</p>
+          </div>
+          <div className="header-actions">
+            <NotificationBell />
           </div>
         </div>
         <nav className="tabs" aria-label="Filter by day">

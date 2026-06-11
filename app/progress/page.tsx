@@ -7,6 +7,7 @@ import { getBodyWeights, saveBodyWeight, type BodyWeight } from "@/lib/bodyweigh
 import { useAuth } from "../AuthProvider";
 import { LineChart, Heatmap, type ChartPoint } from "../Charts";
 import Nav from "../Nav";
+import NotificationBell from "../NotificationBell";
 
 const allExercises = workouts.flatMap((w) =>
   w.exercises.map((e) => ({ id: e.id, name: e.name, day: w.title }))
@@ -113,6 +114,9 @@ export default function ProgressPage() {
           <div>
             <h1 className="title">Progress</h1>
             <p className="tagline">Track your consistency and gains</p>
+          </div>
+          <div className="header-actions">
+            <NotificationBell />
           </div>
         </div>
       </header>

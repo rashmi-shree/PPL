@@ -4,6 +4,21 @@ import { useEffect, useState } from "react";
 import { getSessions, localDateString } from "@/lib/sessions";
 import { getBodyWeights } from "@/lib/bodyweight";
 import { useAuth } from "./AuthProvider";
+import { addNotification } from "@/lib/notificationCenter";
+
+const STREAK_MILESTONES = [3, 7, 14, 30, 50, 100, 365];
+
+function computeStreak(dates: Set<string>): number {
+  let streak = 0;
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  if (!dates.has(localDateString(d))) d.setDate(d.getDate() - 1);
+  while (dates.has(localDateString(d))) {
+    streak += 1;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
 
 const GYM_LINES = [
   "Bro, did you hit the gym today? 💪 Log your sets so I can track your gains.",
@@ -66,6 +81,37 @@ export default function Reminders() {
       setBwToday(bw);
       setDismissed(localStorage.getItem("ppl-nudge-dismissed") === today);
       maybeNotify(lg, bw, today);
+
+      // Record nudges in the notification inbox (deduped to once per day).
+      if (!lg) {
+        addNotification(userId, {
+          type: "reminder",
+          title: "Time to train 💪",
+          body: "You haven't logged a workout today. Tap to get started.",
+          dedupeKey: `reminder-${today}`,
+        });
+      } else if (!bw) {
+        addNotification(userId, {
+          type: "weight",
+          title: "Log today's weight 📈",
+          body: "Quick body-weight entry keeps your progress charts accurate.",
+          dedupeKey: `weight-${today}`,
+        });
+      }
+
+      // Celebrate streak milestones once each.
+      const trainedDates = new Set(
+        sessions.map((s) => s.log_date ?? s.performed_at.slice(0, 10))
+      );
+      const streak = computeStreak(trainedDates);
+      if (STREAK_MILESTONES.includes(streak)) {
+        addNotification(userId, {
+          type: "streak",
+          title: `${streak}-day streak! 🔥`,
+          body: `You've trained ${streak} days in a row. Keep the fire going!`,
+          dedupeKey: `streak-${streak}`,
+        });
+      }
     })();
   }, [userId]);
 

@@ -21,6 +21,8 @@ import Reminders from "./Reminders";
 import Nav from "./Nav";
 import ChatLogger from "./ChatLogger";
 import type { ParsedSet } from "@/lib/chatParse";
+import { addNotification } from "@/lib/notificationCenter";
+import NotificationBell from "./NotificationBell";
 
 const STORAGE_KEY = "ppl-weights-v1";
 const REPS_KEY = "ppl-reps-v1";
@@ -356,6 +358,21 @@ export default function Tracker() {
       };
     });
     if (!entries.some((e) => e.weight !== null)) return;
+
+    // Record any new PRs (beating the best from prior days) in the inbox.
+    const today = localDateString();
+    entries.forEach((e) => {
+      const prev = prByExercise[e.exercise_id];
+      if (e.weight != null && prev != null && e.weight > prev) {
+        addNotification(userId, {
+          type: "pr",
+          title: `New PR: ${e.name} 🏆`,
+          body: `${e.weight} ${unit} — your best yet. Strong work!`,
+          dedupeKey: `pr-${e.exercise_id}-${today}`,
+        });
+      }
+    });
+
     setSessionSync("saving");
     setSync("saving");
     const { ok } = await saveSession(userId, day.id, entries, {
@@ -365,7 +382,7 @@ export default function Tracker() {
     setSessionSync(ok ? "saved" : "error");
     setSync(ok ? "saved" : "error");
     if (ok) await loadSessions();
-  }, [userId, day, weights, reps, unit, notes, rpe, loadSessions]);
+  }, [userId, day, weights, reps, unit, notes, rpe, loadSessions, prByExercise]);
 
   // Debounced auto-save: fires only after a real edit on the active day.
   useEffect(() => {
@@ -389,19 +406,22 @@ export default function Tracker() {
             <h1 className="title">PPL Program</h1>
             <p className="tagline">Push · Pull · Legs — Strength &amp; Hypertrophy</p>
           </div>
-          <div className="unit-toggle" role="group" aria-label="Weight unit">
-            <button
-              className={unit === "kg" ? "active" : ""}
-              onClick={() => setUnit("kg")}
-            >
-              kg
-            </button>
-            <button
-              className={unit === "lb" ? "active" : ""}
-              onClick={() => setUnit("lb")}
-            >
-              lb
-            </button>
+          <div className="header-actions">
+            <NotificationBell />
+            <div className="unit-toggle" role="group" aria-label="Weight unit">
+              <button
+                className={unit === "kg" ? "active" : ""}
+                onClick={() => setUnit("kg")}
+              >
+                kg
+              </button>
+              <button
+                className={unit === "lb" ? "active" : ""}
+                onClick={() => setUnit("lb")}
+              >
+                lb
+              </button>
+            </div>
           </div>
         </div>
 

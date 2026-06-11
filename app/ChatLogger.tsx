@@ -2,11 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Exercise, WorkoutDay } from "@/lib/workouts";
-import {
-  parseWorkoutMessage,
-  type ParsedSet,
-  type Unit,
-} from "@/lib/chatParse";
+import { type ParsedSet, type Unit } from "@/lib/chatParse";
+import { parseWorkoutRemote } from "@/lib/chatParseRemote";
 
 type FillAll = { weight: number | null; reps: number | null } | null;
 
@@ -74,6 +71,7 @@ export default function ChatLogger({
 }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
+  const [thinking, setThinking] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
   const bodyRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -111,7 +109,7 @@ export default function ChatLogger({
 
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight });
-  }, [messages]);
+  }, [messages, thinking]);
 
   const push = (m: Msg) => setMessages((prev) => [...prev, m]);
 
@@ -131,13 +129,19 @@ export default function ChatLogger({
     });
   };
 
-  const handleSend = (raw: string) => {
+  const handleSend = async (raw: string) => {
     const text = raw.trim();
-    if (!text) return;
+    if (!text || thinking) return;
     push({ id: nextId(), role: "user", text });
     setInput("");
 
-    const res = parseWorkoutMessage(text, allExercises, unit);
+    setThinking(true);
+    let res;
+    try {
+      res = await parseWorkoutRemote(text, allExercises, unit);
+    } finally {
+      setThinking(false);
+    }
 
     if (res.sets.length === 0 && !res.fillAll) {
       push({
@@ -327,6 +331,13 @@ export default function ChatLogger({
                   </div>
                 );
               })}
+              {thinking && (
+                <div className="chat-msg bot chat-typing" aria-label="Reading your message">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              )}
             </div>
 
             <form
@@ -340,13 +351,14 @@ export default function ChatLogger({
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="e.g. bench 40kg 8, 45kg 6, 45kg 6"
+                placeholder="e.g. squats 30kg 10 all sets"
                 aria-label="Message"
+                disabled={thinking}
               />
               <button
                 className="chat-send"
                 type="submit"
-                disabled={!input.trim()}
+                disabled={!input.trim() || thinking}
               >
                 Send
               </button>

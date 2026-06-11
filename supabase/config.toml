@@ -1,0 +1,6 @@
+project_id = "ppl-workout-tracker"
+
+# The chat parser proxy is a public-ish endpoint (gated by the project apikey),
+# so it doesn't require an end-user JWT.
+[functions.parse-workout]
+verify_jwt = false

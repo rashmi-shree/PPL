@@ -78,6 +78,28 @@ function scoreExercise(
   return { score, plen };
 }
 
+// Map a name the LLM returned (e.g. "Squats", "bench press") back to one of our
+// real Exercise objects, reusing the same fuzzy scoring as free-text matching.
+export function matchExerciseName(
+  name: string,
+  exercises: Exercise[]
+): Exercise | null {
+  const msg = normalize(name);
+  if (!msg) return null;
+  let best: { ex: Exercise; score: number; plen: number } | null = null;
+  for (const ex of exercises) {
+    const { score, plen } = scoreExercise(msg, ex);
+    if (
+      !best ||
+      score > best.score ||
+      (score === best.score && plen > best.plen)
+    ) {
+      best = { ex, score, plen };
+    }
+  }
+  return best && best.score >= 0.45 ? best.ex : null;
+}
+
 function detectUnit(text: string, fallback: Unit): Unit {
   if (/\b(lbs?|pounds?)\b/.test(text)) return "lb";
   if (/\b(kgs?|kilos?|kilograms?)\b/.test(text)) return "kg";
