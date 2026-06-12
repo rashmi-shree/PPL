@@ -23,6 +23,9 @@ import ChatLogger from "./ChatLogger";
 import type { ParsedSet } from "@/lib/chatParse";
 import { addNotification } from "@/lib/notificationCenter";
 import NotificationBell from "./NotificationBell";
+import dynamic from "next/dynamic";
+
+const FormCoach = dynamic(() => import("./FormCoach"), { ssr: false });
 
 const STORAGE_KEY = "ppl-weights-v1";
 const REPS_KEY = "ppl-reps-v1";
@@ -134,6 +137,9 @@ export default function Tracker() {
     name: string;
     vertical?: boolean;
   } | null>(null);
+
+  // Deadlift form coach
+  const [formCoachOpen, setFormCoachOpen] = useState(false);
 
   const loadSessions = useCallback(async () => {
     const data = await getSessions(userId);
@@ -468,6 +474,11 @@ export default function Tracker() {
                       })
                   : undefined
               }
+              onFormCoach={
+                ex.id === "pull-deadlift"
+                  ? () => setFormCoachOpen(true)
+                  : undefined
+              }
             />
           ))}
         </ul>
@@ -563,6 +574,10 @@ export default function Tracker() {
         <FormVideoModal video={formVideo} onClose={() => setFormVideo(null)} />
       )}
 
+      {formCoachOpen && (
+        <FormCoach onClose={() => setFormCoachOpen(false)} />
+      )}
+
       <ChatLogger
         workouts={workouts}
         activeDayId={activeDay}
@@ -656,6 +671,7 @@ function ExerciseCard({
   onRep,
   onRest,
   onForm,
+  onFormCoach,
 }: {
   index: number;
   exercise: Exercise;
@@ -668,6 +684,7 @@ function ExerciseCard({
   onRep: (idx: number, v: string) => void;
   onRest: () => void;
   onForm?: () => void;
+  onFormCoach?: () => void;
 }) {
   const total = Number(exercise.sets) || 3;
   const target = exercise.type === "compound" ? 8 : 12;
@@ -729,6 +746,11 @@ function ExerciseCard({
               </button>
             )}
           </div>
+          {onFormCoach && (
+            <button className="form-coach-btn" onClick={onFormCoach} type="button">
+              🤖 Form Coach
+            </button>
+          )}
           {exercise.note && <p className="card-note">{exercise.note}</p>}
         </div>
       </div>

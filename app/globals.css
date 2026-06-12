@@ -1990,3 +1990,306 @@ body::before {
   margin-top: 4px;
   opacity: 0.8;
 }
+
+/* ── Form Coach ─────────────────────────────────────────────────────────── */
+
+.fc-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.fc-panel {
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 600px;
+  max-height: 96dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.fc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.fc-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.fc-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 2px 0 0;
+}
+
+.fc-close {
+  background: var(--surface2);
+  border: none;
+  color: var(--text);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Guide screen */
+.fc-guide {
+  padding: 24px 24px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.fc-guide-icon {
+  font-size: 2.4rem;
+}
+
+.fc-guide-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  text-align: center;
+}
+
+.fc-guide-list {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  padding-left: 20px;
+  width: 100%;
+  max-width: 380px;
+}
+
+.fc-guide-list strong {
+  color: var(--text);
+}
+
+.fc-diagram {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 8px 0;
+  background: var(--surface2);
+  border-radius: 14px;
+  padding: 16px 28px;
+  font-size: 2rem;
+}
+
+.fc-diagram-arrow {
+  font-size: 1.4rem;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.fc-guide-sub {
+  font-size: 0.83rem;
+  color: var(--muted);
+  text-align: center;
+  max-width: 340px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.fc-start-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 32px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.fc-start-btn:active {
+  opacity: 0.85;
+}
+
+/* Loading */
+.fc-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 24px;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.fc-loading-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.fc-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: fc-spin 0.7s linear infinite;
+}
+
+@keyframes fc-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error */
+.fc-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 24px;
+  color: var(--text);
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+/* Live view */
+.fc-live {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 16px 20px;
+  overflow-y: auto;
+}
+
+.fc-hidden {
+  display: none;
+}
+
+.fc-video-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+  flex-shrink: 0;
+}
+
+.fc-video-hidden {
+  display: none;
+}
+
+.fc-canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.fc-phase-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.fc-cue-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--surface2);
+  border-radius: 14px;
+  padding: 14px 16px;
+  min-height: 60px;
+}
+
+.fc-cue-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  line-height: 1.3;
+}
+
+.fc-cue-text {
+  font-size: 0.93rem;
+  color: var(--text);
+  line-height: 1.5;
+  margin: 0;
+  font-weight: 600;
+}
+
+.fc-cue-empty {
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.fc-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: center;
+  margin: 0;
+}
+
+.fc-stop-btn {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--muted);
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+}
+
+.fc-stop-btn:active {
+  background: var(--surface2);
+}
+
+/* Form Coach trigger button on exercise card */
+.form-coach-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 5px 11px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+}
+
+.form-coach-btn:active {
+  opacity: 0.85;
+}

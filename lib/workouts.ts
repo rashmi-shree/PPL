@@ -127,6 +127,23 @@ export const workouts: WorkoutDay[] = [
     subtitle: "Back · Biceps",
     exercises: [
       {
+        id: "pull-deadlift",
+        name: "Deadlift",
+        video: "op9kVnSso6Q",
+        sets: "3",
+        reps: "5 (1 warm-up × 5)",
+        rest: "3 min",
+        type: "compound",
+        note: "Hip-hinge pattern. Keep the bar close, drive hips through at lockout.",
+        aliases: [
+          "deadlift",
+          "deadlifts",
+          "conventional deadlift",
+          "barbell deadlift",
+          "dl",
+        ],
+      },
+      {
         id: "pull-lat",
         name: "Lat Pulldown / Assisted Pull-Up",
         video: "SALxEARiMkw",
